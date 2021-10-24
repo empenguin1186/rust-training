@@ -1,10 +1,14 @@
 use super::SortOrder;
 
-fn sort<T: Ord>(x: &mut [T], order: &SortOrder) {
-    match *order {
-        SortOrder::Ascending => do_sort(x, true),
-        SortOrder::Descending => do_sort(x, false),
+fn sort<T: Ord>(x: &mut [T], order: &SortOrder) -> Result<(), String> {
+    if x.len().is_power_of_two() {
+        match *order {
+            SortOrder::Ascending => do_sort(x, true),
+            SortOrder::Descending => do_sort(x, false),
+        };
+        return Ok(());
     }
+    Err(format!("The length of x is not a power of two. (x.len(): {})", x.len()))
 }
 
 fn do_sort<T: Ord>(x: &mut [T], up: bool) {
@@ -54,9 +58,9 @@ mod tests {
             vec![330, 110, 30, 21, 20, 11, 10, 4],
         }
     )]
-    fn sort_u32(input: Vec<u32>, order: SortOrder, expected: Vec<u32>) {
+    fn 正常系_u32型の配列のソート(input: Vec<u32>, order: SortOrder, expected: Vec<u32>) {
         let mut actual = input;
-        sort(&mut actual, &order);
+        assert_eq!(sort(&mut actual, &order), Ok(()));
         assert_eq!(actual, expected);
     }
 
@@ -74,9 +78,19 @@ mod tests {
             vec!["with", "no", "memory-effecient", "is", "fast", "and", "Rust", "GC"],
         }
     )]
-    fn sort_str(input: Vec<&str>, order: SortOrder, expected: Vec<&str>) {
+    fn 正常系_str型の配列のソート(input: Vec<&str>, order: SortOrder, expected: Vec<&str>) {
         let mut actual = input;
-        sort(&mut actual, &order);
+        assert_eq!(sort(&mut actual, &order), Ok(()));
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn 異常系_要素数が2の累乗となっていない() {
+        let mut x = vec![10, 30, 11];
+        match sort(&mut x, &SortOrder::Ascending) {
+            Ok(_) => panic!("sort() must return Err."),
+            Err(e) => assert_eq!(e, "The length of x is not a power of two. (x.len(): 3)"),
+        }
+        assert!(sort(&mut x, &SortOrder::Ascending).is_err());
     }
 }
