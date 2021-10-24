@@ -1,8 +1,8 @@
 pub mod first;
-// #[cfg(test)]
-// mod tests {
-//     #[test]
-//     fn it_works() {
-//         assert_eq!(2 + 2, 4);
-//     }
-// }
+pub mod second;
+
+// ソートの並び順を表す列挙型
+pub enum SortOrder {
+    Ascending, // 昇順
+    Descending, // 降順
+}
