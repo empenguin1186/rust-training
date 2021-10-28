@@ -47,5 +47,77 @@ impl<T: Default> ToyVec<T> {
         }
     }
 
-    fn grow(&mut self) {}
+    pub fn get_or<'a>(&'a self, index: usize, default: &'a T) -> &'a T {
+        match self.get(index) {
+            Some(v) => v,
+            None => default,
+        }
+    }
+
+    // pub fn _get_or<'a, 'b>(&'a self, index: usize, default: &'b T) -> &'a T where 'b: 'a {
+    //     match self.get(index) {
+    //         Some(v) => v,
+    //         None => default,
+    //     }
+    // }
+
+    pub fn pop(&mut self) -> Option<T> {
+        if self.len == 0 {
+            None
+        } else {
+            self.len -= 1;
+            let elem = std::mem::replace(&mut self.elements[self.len], Default::default());
+            Some(elem)
+        }
+    }
+
+    fn grow(&mut self) {
+        if self.capacity() == 0 {
+            self.elements = Self::allocate_in_heap(1);
+        } else {
+            let new_elements = Self::allocate_in_heap(self.capacity() * 2);
+            let old_elements = std::mem::replace(&mut self.elements, new_elements);
+            for (i, elem) in old_elements.into_vec().into_iter().enumerate() {
+                self.elements[i] = elem;
+            }
+        }
+    }
+
+    pub fn iter<'vec>(&'vec self) -> Iter<'vec, T> {
+        Iter {
+            elements: &self.elements,
+            len: self.len,
+            pos: 0,
+        }
+    }
+}
+
+pub struct Iter<'vec, T> {
+    elements: &'vec Box<[T]>,
+    len: usize,
+    pos: usize,
+}
+
+impl<'vec, T> Iterator for Iter<'vec, T> {
+    type Item = &'vec T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.pos >= self.len {
+            None
+        } else {
+            let res = Some(&self.elements[self.pos]);
+            self.pos += 1;
+            res
+        }
+    }
+}
+
+impl<'vec, T: Default> IntoIterator for &'vec ToyVec<T> {
+    type Item = &'vec T;
+
+    type IntoIter = Iter<'vec, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
 }
